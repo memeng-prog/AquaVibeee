@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 700" role="img" aria-label="Premium reef aquarium">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c4a6e"/>
+      <stop offset="100%" stop-color="#082f49"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity=".9"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="sand" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="700" fill="url(#bg)"/>
+  <ellipse cx="400" cy="620" rx="320" ry="40" fill="#000" opacity=".2"/>
+  <rect x="120" y="80" width="560" height="480" rx="12" fill="#1e293b" stroke="#94a3b8" stroke-width="4"/>
+  <rect x="140" y="120" width="520" height="400" rx="6" fill="url(#water)"/>
+  <rect x="140" y="460" width="520" height="60" fill="url(#sand)"/>
+  <ellipse cx="280" cy="430" rx="50" ry="35" fill="#f43f5e" opacity=".85"/>
+  <ellipse cx="380" cy="400" rx="40" ry="55" fill="#a855f7" opacity=".8"/>
+  <ellipse cx="500" cy="420" rx="55" ry="40" fill="#f97316" opacity=".85"/>
+  <ellipse cx="580" cy="380" rx="35" ry="50" fill="#22d3ee" opacity=".75"/>
+  <path d="M200 480 Q240 440 280 480 T360 480" stroke="#10b981" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path d="M420 490 Q460 450 500 490 T580 470" stroke="#34d399" stroke-width="6" fill="none"/>
+  <circle cx="220" cy="200" r="25" fill="#fbbf24" opacity=".6"/>
+  <circle cx="600" cy="180" r="18" fill="#fde047" opacity=".5"/>
+  <path d="M300 250 Q320 220 340 250" stroke="#fff" stroke-width="3" fill="none" opacity=".4"/>
+  <text x="400" y="600" text-anchor="middle" fill="#e0f2fe" font-family="system-ui,sans-serif" font-size="22" font-weight="600">Premium Reef Aquarium</text>
+</svg>

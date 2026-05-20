@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Aquarium craftsmanship">
+  <defs>
+    <linearGradient id="w" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="#f0f9ff"/>
+  <rect x="80" y="60" width="640" height="420" rx="16" fill="#fff" stroke="#bae6fd" stroke-width="3"/>
+  <rect x="120" y="100" width="280" height="340" rx="8" fill="url(#w)"/>
+  <rect x="120" y="380" width="280" height="60" fill="#fcd34d"/>
+  <circle cx="200" cy="280" r="30" fill="#fb7185"/>
+  <circle cx="280" cy="300" r="22" fill="#38bdf8"/>
+  <circle cx="240" cy="250" r="18" fill="#f472b6"/>
+  <rect x="440" y="120" width="240" height="24" rx="4" fill="#e0f2fe"/>
+  <rect x="440" y="160" width="200" height="16" rx="4" fill="#e0f2fe"/>
+  <rect x="440" y="200" width="220" height="16" rx="4" fill="#e0f2fe"/>
+  <rect x="440" y="260" width="180" height="80" rx="8" fill="#0ea5e9" opacity=".15"/>
+  <text x="460" y="310" fill="#0369a1" font-family="system-ui,sans-serif" font-size="18" font-weight="700">Hand-crafted</text>
+  <text x="460" y="335" fill="#64748b" font-family="system-ui,sans-serif" font-size="14">Since 2008 · San Diego</text>
+  <path d="M500 400 L540 360 L580 400 L620 370" stroke="#0ea5e9" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>
