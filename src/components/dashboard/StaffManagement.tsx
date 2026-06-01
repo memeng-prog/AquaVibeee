@@ -2,12 +2,31 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext'
+import { useToast } from '@/context/ToastContext'
 import { getSupabase } from '@/lib/supabase';
 
-const adminApiBase = import.meta.env.DEV ? 'http://localhost:8787' : ''
-
 function adminApiUrl(path: string) {
-  return `${adminApiBase}${path}`
+  return path
+}
+
+const GMAIL_EMAIL_PATTERN = /^[^\s@]+@gmail\.com$/i
+
+async function readResponseError(res: Response) {
+  const text = await res.text().catch(() => '')
+  if (!text.trim()) {
+    return `${res.status} ${res.statusText}`.trim()
+  }
+
+  try {
+    const parsed = JSON.parse(text) as { error?: unknown; message?: unknown }
+    const message = parsed.error ?? parsed.message
+    if (typeof message === 'string' && message.trim()) return message
+    if (message && typeof message === 'object') return JSON.stringify(message)
+  } catch {
+    // fall through to raw text
+  }
+
+  return text
 }
 
 export function StaffManagement() {
@@ -21,6 +40,7 @@ export function StaffManagement() {
   const [removingStaff, setRemovingStaff] = useState(false)
 
   const { user } = useAuth()
+  const { showToast } = useToast()
   const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
@@ -49,7 +69,12 @@ export function StaffManagement() {
       if (!list || list.length === 0) {
         // If we didn't get staff from the anon client (RLS or config), call the admin API fallback
         try {
-          const resp = await fetch(adminApiUrl('/api/list-staff'))
+          const adminSecret = import.meta.env.VITE_ADMIN_API_SECRET
+          const headers: Record<string, string> = {}
+          if (adminSecret) headers['x-admin-secret'] = adminSecret
+
+          const resp = await fetch(adminApiUrl('/api/list-staff'), { headers })
+          
           if (resp.ok) {
             const body = await resp.json().catch(() => ({}))
             const remote = (body.data || []).map((r: any) => ({ id: r.id, name: r.full_name || r.email, email: r.email }))
@@ -84,6 +109,11 @@ export function StaffManagement() {
       return
     }
 
+    if (!GMAIL_EMAIL_PATTERN.test(newStaffEmail.trim())) {
+      alert('Invalid email address. Use a Gmail address ending in @gmail.com')
+      return
+    }
+
     try {
       const adminSecret = import.meta.env.VITE_ADMIN_API_SECRET
       const headers: Record<string, string> = { 'Content-Type': 'application/json' }
@@ -95,8 +125,11 @@ export function StaffManagement() {
         body: JSON.stringify({ email: newStaffEmail, password: newStaffPassword, role: newStaffRole, full_name: newStaffName }),
       })
 
-      const body = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(body?.error || JSON.stringify(body) || 'Failed')
+      if (!res.ok) {
+        throw new Error(await readResponseError(res))
+      }
+
+      await res.json().catch(() => ({}))
 
       // Refresh the staff list from the database to ensure we show only users with role='staff'
       await loadStaff()
@@ -106,7 +139,7 @@ export function StaffManagement() {
       setNewStaffEmail('')
       setNewStaffPassword('')
       setNewStaffRole('staff')
-      alert('User created successfully')
+      showToast('User created successfully')
     } catch (err) {
       console.error('Failed to create user', err)
       alert('Failed to create user: ' + String(err))
@@ -128,8 +161,11 @@ export function StaffManagement() {
         body: JSON.stringify({ id: staffToRemove.id }),
       })
 
-      const body = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(body?.error || JSON.stringify(body) || 'Failed')
+      if (!res.ok) {
+        throw new Error(await readResponseError(res))
+      }
+
+      await res.json().catch(() => ({}))
 
       await loadStaff()
       setStaffToRemove(null)
@@ -208,6 +244,8 @@ export function StaffManagement() {
         <Input
           placeholder="Staff Email"
           type="email"
+          pattern="[^\s@]+@gmail\.com"
+          title="Use a Gmail address ending in @gmail.com"
           value={newStaffEmail}
           onChange={(e) => setNewStaffEmail(e.target.value)}
         />

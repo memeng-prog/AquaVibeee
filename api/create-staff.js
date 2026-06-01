@@ -15,6 +15,17 @@ function checkSecret(req, res) {
   return true
 }
 
+function errorMessage(err) {
+  if (!err) return 'Unknown error'
+  if (typeof err === 'string') return err
+  if (typeof err === 'object') {
+    return err.message || err.error_description || err.error || JSON.stringify(err) || 'Unknown error'
+  }
+  return String(err)
+}
+
+const GMAIL_EMAIL_PATTERN = /^[^\s@]+@gmail\.com$/i
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
   if (!checkSecret(req, res)) return
@@ -30,6 +41,9 @@ export default async function handler(req, res) {
     const { email, password, full_name = '', role = 'staff' } = body
 
     if (!email) return res.status(400).json({ error: 'email is required' })
+    if (!GMAIL_EMAIL_PATTERN.test(String(email).trim())) {
+      return res.status(400).json({ error: 'Invalid email address. Use a Gmail address ending in @gmail.com' })
+    }
 
     // create auth user
     const { data: userData, error: createErr } = await supabase.auth.admin.createUser({
@@ -39,7 +53,7 @@ export default async function handler(req, res) {
     })
 
     if (createErr) {
-      return res.status(500).json({ error: createErr.message || createErr })
+      return res.status(500).json({ error: errorMessage(createErr) })
     }
 
     const user = userData.user
@@ -52,12 +66,12 @@ export default async function handler(req, res) {
     })
 
     if (profileErr) {
-      return res.status(500).json({ error: profileErr.message || profileErr })
+      return res.status(500).json({ error: errorMessage(profileErr) })
     }
 
     return res.status(200).json({ created: true, id: user.id })
   } catch (err) {
     console.error(err)
-    return res.status(500).json({ error: 'Unexpected error' })
+    return res.status(500).json({ error: errorMessage(err) })
   }
 }

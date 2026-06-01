@@ -33,7 +33,7 @@ export function HomePage() {
               <h2 className="font-display text-3xl font-bold text-ocean-900">Featured Tanks</h2>
               <p className="mt-2 text-ocean-600">Hand-picked favorites from our collection</p>
             </div>
-            <Link to="/shop" className="hidden sm:block">
+            <Link to="/shop" className="block">
               <Button variant="outline" rightIcon={<ArrowRight size={16} />}>
                 View All
               </Button>

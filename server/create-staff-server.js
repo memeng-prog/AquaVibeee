@@ -26,7 +26,7 @@ try {
 
 const PORT = process.env.PORT || 8787
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 const ADMIN_SECRET = process.env.ADMIN_API_SECRET || process.env.VITE_ADMIN_API_SECRET
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
@@ -61,10 +61,21 @@ function sendJSON(res, status, obj) {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type,apikey,authorization',
+    'Access-Control-Allow-Headers': 'Content-Type,apikey,authorization,x-admin-secret',
   })
   res.end(body)
 }
+
+function errorMessage(err) {
+  if (!err) return 'Unknown error'
+  if (typeof err === 'string') return err
+  if (typeof err === 'object') {
+    return err.message || err.error_description || err.error || JSON.stringify(err) || 'Unknown error'
+  }
+  return String(err)
+}
+
+const GMAIL_EMAIL_PATTERN = /^[^\s@]+@gmail\.com$/i
 
 const server = http.createServer(async (req, res) => {
   function checkAdminSecret() {
@@ -78,7 +89,7 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(204, {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type,apikey,authorization',
+      'Access-Control-Allow-Headers': 'Content-Type,apikey,authorization,x-admin-secret',
     })
     res.end()
     return
@@ -100,6 +111,11 @@ const server = http.createServer(async (req, res) => {
         return
       }
 
+      if (!GMAIL_EMAIL_PATTERN.test(String(email).trim())) {
+        sendJSON(res, 400, { error: 'Invalid email address. Use a Gmail address ending in @gmail.com' })
+        return
+      }
+
       // Create user via admin API
       const { data: createdUser, error: createError } = await admin.auth.admin.createUser({
         email,
@@ -109,7 +125,7 @@ const server = http.createServer(async (req, res) => {
 
       if (createError) {
         console.error('createUser error:', createError)
-        sendJSON(res, 500, { error: createError.message || createError })
+        sendJSON(res, 500, { error: errorMessage(createError) })
         return
       }
 
@@ -122,7 +138,7 @@ const server = http.createServer(async (req, res) => {
       const { error: profileError } = await admin.from('profiles').insert({ id: userId, email, full_name, role })
       if (profileError) {
         console.error('Failed to insert profile row:', profileError)
-        sendJSON(res, 500, { error: profileError.message || profileError })
+        sendJSON(res, 500, { error: errorMessage(profileError) })
         return
       }
 
@@ -130,7 +146,7 @@ const server = http.createServer(async (req, res) => {
       sendJSON(res, 200, { userId })
     } catch (err) {
       console.error('Unexpected server error', err)
-      sendJSON(res, 500, { error: String(err) })
+      sendJSON(res, 500, { error: errorMessage(err) })
     }
 
     return
@@ -242,7 +258,7 @@ const server = http.createServer(async (req, res) => {
 
         if (lookupError) {
           console.error('Failed to lookup profile for delete-user:', lookupError)
-          sendJSON(res, 500, { error: lookupError.message || lookupError })
+          sendJSON(res, 500, { error: errorMessage(lookupError) })
           return
         }
 
@@ -258,7 +274,7 @@ const server = http.createServer(async (req, res) => {
       const { error: delProfileError } = await admin.from('profiles').delete().eq('id', id)
       if (delProfileError) {
         console.error('Failed to delete profile row:', delProfileError)
-        sendJSON(res, 500, { error: delProfileError.message || delProfileError })
+        sendJSON(res, 500, { error: errorMessage(delProfileError) })
         return
       }
 
@@ -269,7 +285,7 @@ const server = http.createServer(async (req, res) => {
       } catch (e) {
         console.error('Failed to delete auth user:', e)
         // Continue — profile already removed; still report error
-        sendJSON(res, 500, { error: String(e) })
+        sendJSON(res, 500, { error: errorMessage(e) })
         return
       }
 
@@ -277,7 +293,7 @@ const server = http.createServer(async (req, res) => {
       return
     } catch (err) {
       console.error('Unexpected server error in delete-user', err)
-      sendJSON(res, 500, { error: String(err) })
+      sendJSON(res, 500, { error: errorMessage(err) })
       return
     }
   }

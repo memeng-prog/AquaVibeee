@@ -1,8 +1,12 @@
 <<<<<<< HEAD
- # Meng's Fish Tank
+
+# Meng's Fish Tank
+
 =======
+
 # AquaVibe Studio
->>>>>>> d24a0bc (Fix: display peso symbol instead of dollar sign in prices)
+
+> > > > > > > d24a0bc (Fix: display peso symbol instead of dollar sign in prices)
 
 Professional e-commerce storefront for premium aquariums — built with **React**, **TypeScript**, **Vite**, **Tailwind CSS**, and **Supabase-ready** architecture.
 

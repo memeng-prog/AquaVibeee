@@ -52,6 +52,8 @@ function getDialCode(country: string) {
   return COUNTRY_OPTIONS.find((option) => option.value === country)?.dialCode || ''
 }
 
+const GMAIL_EMAIL_PATTERN = /^[^\s@]+@gmail\.com$/i
+
 const shippingFieldLabels: Record<keyof Pick<CheckoutFormData, 'fullName' | 'email' | 'phone' | 'addressLine1' | 'city' | 'postalCode' | 'country'>, string> = {
   fullName: 'Full Name',
   email: 'Email',
@@ -92,7 +94,7 @@ function getShippingErrors(form: CheckoutFormData): Partial<Record<keyof Checkou
   const email = form.email.trim()
 
   if (!form.fullName.trim()) newErrors.fullName = 'Required'
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) newErrors.email = 'Valid email required'
+  if (!email || !GMAIL_EMAIL_PATTERN.test(email)) newErrors.email = 'Invalid email address'
   if (!form.phone.trim()) newErrors.phone = 'Required'
   else if (phAddress && !/^\d{10}$/.test(form.phone)) newErrors.phone = 'Philippines numbers must be 10 digits after +63'
   else if (!phAddress && !/^\d{7,15}$/.test(form.phone)) newErrors.phone = 'Numbers only, 7-15 digits'
@@ -152,10 +154,20 @@ export function CheckoutPage() {
   }
 
   const updateCard = (field: keyof typeof initialCard, value: string) => {
-    const nextValue =
-      field === 'number' || field === 'cvc'
-        ? digitsOnly(value)
-        : value
+    let nextValue = value
+
+    if (field === 'number' || field === 'cvc') {
+      nextValue = digitsOnly(value)
+    } else if (field === 'expiry') {
+      const digits = digitsOnly(value)
+      if (digits.length > 4) {
+        nextValue = card.expiry
+      } else if (digits.length > 2) {
+        nextValue = `${digits.slice(0, 2)}/${digits.slice(2)}`
+      } else {
+        nextValue = digits
+      }
+    }
 
     setCard((prev) => ({ ...prev, [field]: nextValue }))
     setCardErrors((prev) => ({ ...prev, [field]: '' }))
@@ -173,8 +185,25 @@ export function CheckoutPage() {
       if (!card.number.trim()) newCardErrors.number = 'Required'
       else if (!/^\d{13,19}$/.test(card.number)) newCardErrors.number = '13-19 digits only'
 
-      if (!card.expiry.trim()) newCardErrors.expiry = 'Required'
-      else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(card.expiry)) newCardErrors.expiry = 'MM/YY only'
+      if (!card.expiry.trim()) {
+        newCardErrors.expiry = 'Required'
+      } else {
+        const match = card.expiry.match(/^(0[1-9]|1[0-2])\/(\d{2})$/)
+        if (!match) {
+          newCardErrors.expiry = 'MM/YY only'
+        } else {
+          const month = parseInt(match[1], 10)
+          const year = parseInt(match[2], 10) + 2000
+
+          const now = new Date()
+          const currentYear = now.getFullYear()
+          const currentMonth = now.getMonth() + 1
+
+          if (year < currentYear || (year === currentYear && month < currentMonth)) {
+            newCardErrors.expiry = 'Card has expired'
+          }
+        }
+      }
 
       if (!card.cvc.trim()) newCardErrors.cvc = 'Required'
       else if (!/^\d{3,4}$/.test(card.cvc)) newCardErrors.cvc = '3-4 digits only'
@@ -209,9 +238,6 @@ export function CheckoutPage() {
     setStep(3)
   }
 
-  const shippingErrorsPreview = getShippingErrors(form)
-  const canContinueToDelivery = Object.keys(shippingErrorsPreview).length === 0
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const { shippingErrors, cardErrors: nextCardErrors, isValid } = validate()
@@ -244,9 +270,8 @@ export function CheckoutPage() {
               type="button"
               disabled
               aria-disabled="true"
-              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors cursor-default ${
-                step === s ? 'bg-ocean-600 text-white' : 'bg-ocean-100 text-ocean-600'
-              }`}
+              className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors cursor-default ${step === s ? 'bg-ocean-600 text-white' : 'bg-ocean-100 text-ocean-600'
+                }`}
             >
               {s === 1 ? 'Shipping' : s === 2 ? 'Delivery' : 'Payment'}
             </button>
@@ -259,11 +284,20 @@ export function CheckoutPage() {
               <section className="rounded-2xl bg-white p-6 shadow-soft space-y-4">
                 <h2 className="font-display text-lg font-semibold text-ocean-900">Shipping Address</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Input label="Full Name *" required value={form.fullName} onChange={(e) => update('fullName', e.target.value)} error={errors.fullName} />
+                  <Input
+                    label="Full Name *"
+                    required
+                    value={form.fullName}
+                    onChange={(e) => update('fullName', e.target.value)}
+                    onBlur={() => setErrors((prev) => ({ ...prev, fullName: getShippingErrors(form).fullName }))}
+                    error={errors.fullName}
+                  />
                   <Input
                     label="Email *"
                     required
                     type="email"
+                    pattern="[^\s@]+@gmail\.com"
+                    title="Invalid email address"
                     value={form.email}
                     onChange={(e) => update('email', e.target.value)}
                     onBlur={() => setErrors((prev) => ({ ...prev, email: getShippingErrors(form).email }))}
@@ -278,6 +312,7 @@ export function CheckoutPage() {
                       required
                       value={form.country}
                       onChange={(e) => update('country', e.target.value)}
+                      onBlur={() => setErrors((prev) => ({ ...prev, country: getShippingErrors(form).country }))}
                       className={`w-full rounded-xl border border-ocean-200 bg-white px-4 py-2.5 text-ocean-900 transition-colors focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 ${errors.country ? 'border-coral-500 focus:border-coral-500 focus:ring-coral-500/20' : ''}`}
                     >
                       {COUNTRY_OPTIONS.map((option) => (
@@ -307,15 +342,31 @@ export function CheckoutPage() {
                         maxLength={isPhilippines(form.country) ? 10 : 15}
                         value={form.phone}
                         onChange={(e) => update('phone', e.target.value)}
+                        onBlur={() => setErrors((prev) => ({ ...prev, phone: getShippingErrors(form).phone }))}
                         className={`w-full rounded-xl border border-ocean-200 bg-white px-4 py-2.5 text-ocean-900 placeholder:text-ocean-400 transition-colors focus:border-ocean-500 focus:outline-none focus:ring-2 focus:ring-ocean-500/20 ${errors.phone ? 'border-coral-500 focus:border-coral-500 focus:ring-coral-500/20' : ''} ${isPhilippines(form.country) ? 'rounded-l-none' : ''}`}
                         placeholder={isPhilippines(form.country) ? '9123456789' : 'Phone number'}
                       />
                     </div>
                     {errors.phone && <p className="mt-1 text-sm text-coral-600">{errors.phone}</p>}
                   </div>
-                  <Input label="Address *" required value={form.addressLine1} onChange={(e) => update('addressLine1', e.target.value)} error={errors.addressLine1} className="sm:col-span-2" />
+                  <Input
+                    label="Address *"
+                    required
+                    value={form.addressLine1}
+                    onChange={(e) => update('addressLine1', e.target.value)}
+                    onBlur={() => setErrors((prev) => ({ ...prev, addressLine1: getShippingErrors(form).addressLine1 }))}
+                    error={errors.addressLine1}
+                    className="sm:col-span-2"
+                  />
                   <Input label="Apartment, suite, etc. (optional)" value={form.addressLine2 ?? ''} onChange={(e) => update('addressLine2', e.target.value)} className="sm:col-span-2" />
-                  <Input label="City *" required value={form.city} onChange={(e) => update('city', e.target.value)} error={errors.city} />
+                  <Input
+                    label="City *"
+                    required
+                    value={form.city}
+                    onChange={(e) => update('city', e.target.value)}
+                    onBlur={() => setErrors((prev) => ({ ...prev, city: getShippingErrors(form).city }))}
+                    error={errors.city}
+                  />
                   <Input
                     label="State (optional)"
                     value={form.state}
@@ -329,10 +380,11 @@ export function CheckoutPage() {
                     pattern="[0-9]*"
                     value={form.postalCode}
                     onChange={(e) => update('postalCode', e.target.value)}
+                    onBlur={() => setErrors((prev) => ({ ...prev, postalCode: getShippingErrors(form).postalCode }))}
                     error={errors.postalCode}
                   />
                 </div>
-                <Button type="button" onClick={handleContinueToDelivery} disabled={!canContinueToDelivery}>Continue to Delivery</Button>
+                <Button type="button" onClick={handleContinueToDelivery}>Continue to Delivery</Button>
               </section>
             )}
 
@@ -342,11 +394,10 @@ export function CheckoutPage() {
                 {(Object.keys(SHIPPING_RATES) as Array<keyof typeof SHIPPING_RATES>).map((key) => (
                   <label
                     key={key}
-                    className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-colors ${
-                      form.shippingMethod === key
-                        ? 'border-ocean-500 bg-ocean-50'
-                        : 'border-ocean-100 hover:border-ocean-200'
-                    }`}
+                    className={`flex cursor-pointer items-center justify-between rounded-xl border-2 p-4 transition-colors ${form.shippingMethod === key
+                      ? 'border-ocean-500 bg-ocean-50'
+                      : 'border-ocean-100 hover:border-ocean-200'
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <input
@@ -383,9 +434,8 @@ export function CheckoutPage() {
                   {(['card', 'paypal', 'cod'] as const).map((method) => (
                     <label
                       key={method}
-                      className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 ${
-                        form.paymentMethod === method ? 'border-ocean-500 bg-ocean-50' : 'border-ocean-100'
-                      }`}
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 ${form.paymentMethod === method ? 'border-ocean-500 bg-ocean-50' : 'border-ocean-100'
+                        }`}
                     >
                       <input
                         type="radio"
@@ -399,8 +449,8 @@ export function CheckoutPage() {
                         {method === 'card'
                           ? 'Credit / Debit Card'
                           : method === 'cod'
-                          ? 'Cash on Delivery'
-                          : 'Paypal, Gcash, Maya'}
+                            ? 'Cash on Delivery'
+                            : 'Paypal, Gcash, Maya'}
                       </span>
                     </label>
                   ))}
@@ -414,6 +464,7 @@ export function CheckoutPage() {
                       pattern="[0-9]*"
                       value={card.number}
                       onChange={(e) => updateCard('number', e.target.value)}
+                      onBlur={() => setCardErrors((prev) => ({ ...prev, number: validateCard().number }))}
                       error={cardErrors.number}
                       placeholder="4242 4242 4242 4242"
                       className="sm:col-span-2"
@@ -423,6 +474,7 @@ export function CheckoutPage() {
                       required
                       value={card.expiry}
                       onChange={(e) => updateCard('expiry', e.target.value)}
+                      onBlur={() => setCardErrors((prev) => ({ ...prev, expiry: validateCard().expiry }))}
                       error={cardErrors.expiry}
                       placeholder="MM/YY"
                     />
@@ -433,6 +485,7 @@ export function CheckoutPage() {
                       pattern="[0-9]*"
                       value={card.cvc}
                       onChange={(e) => updateCard('cvc', e.target.value)}
+                      onBlur={() => setCardErrors((prev) => ({ ...prev, cvc: validateCard().cvc }))}
                       error={cardErrors.cvc}
                       placeholder="123"
                     />
