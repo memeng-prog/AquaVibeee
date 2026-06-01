@@ -42,7 +42,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single()
 
         const profileData = profile as ProfileData
-        const role = profileData?.role ?? 'customer'
+        const rawRole = String(profileData?.role ?? 'customer').trim().toLowerCase()
+        const role = rawRole === 'admin' || rawRole === 'staff' ? (rawRole as ProfileRole) : 'customer'
         setUser({ id: session.user.id, email: session.user.email ?? '', role, full_name: profileData?.full_name })
           console.debug('[Auth] profile:', profile)
       } else {
@@ -64,7 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .single()
 
           const profileData = profile as ProfileData
-          const role = profileData?.role ?? 'customer'
+          const rawRole = String(profileData?.role ?? 'customer').trim().toLowerCase()
+          const role = rawRole === 'admin' || rawRole === 'staff' ? (rawRole as ProfileRole) : 'customer'
           setUser({ id: session.user!.id, email: session.user!.email ?? '', role, full_name: profileData?.full_name })
         })()
       }
@@ -108,7 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userId) {
       const { data: profile } = await supabase.from('profiles').select('role, full_name').eq('id', userId).single()
       const profileData = profile as ProfileData
-      const role = profileData?.role ?? 'customer'
+      const rawRole = String(profileData?.role ?? 'customer').trim().toLowerCase()
+      const role = rawRole === 'admin' || rawRole === 'staff' ? (rawRole as ProfileRole) : 'customer'
       setUser({ id: userId, email, role, full_name: profileData?.full_name })
     }
 
