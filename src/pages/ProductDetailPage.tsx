@@ -5,9 +5,10 @@ import { useCart } from '@/context/CartContext'
 import { useToast } from '@/context/ToastContext'
 import { CATEGORY_LABELS } from '@/lib/constants'
 import { formatPrice } from '@/lib/utils'
+import { MOCK_PRODUCTS } from '@/data/products'
 import { fetchProductBySlug } from '@/services/productService'
 import type { Product } from '@/types'
-import { Check, Minus, Plus, ShoppingCart, Truck } from 'lucide-react'
+import { ArrowLeft, Check, Minus, Plus, ShoppingCart, Truck } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
@@ -27,7 +28,9 @@ export function ProductDetailPage() {
     let cancelled = false
     fetchProductBySlug(slug).then((p) => {
       if (!cancelled) {
-        setProduct(p)
+        const normalizedSlug = decodeURIComponent(slug).toLowerCase().trim()
+        const fallback = MOCK_PRODUCTS.find((m) => m.slug.toLowerCase() === normalizedSlug) ?? null
+        setProduct(p ?? fallback)
         setResolvedSlug(slug)
       }
     })
@@ -77,14 +80,13 @@ export function ProductDetailPage() {
   return (
     <div className="py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <nav className="mb-8 text-sm text-ocean-500">
-          <Link to="/" className="hover:text-ocean-700">Home</Link>
-          <span className="mx-2">/</span>
-          <Link to="/shop" className="hover:text-ocean-700">Shop</Link>
-          <span className="mx-2">/</span>
-          <span className="text-ocean-800">{product.name}</span>
-        </nav>
-
+        <div className="mb-8">
+          <Link to="/shop">
+            <Button variant="outline" leftIcon={<ArrowLeft size={16} />}>
+              Back to Shop
+            </Button>
+          </Link>
+        </div>
         <div className="grid gap-12 lg:grid-cols-2">
           <div>
             <div className="aspect-square overflow-hidden rounded-2xl bg-ocean-50 shadow-soft">
@@ -200,7 +202,7 @@ export function ProductDetailPage() {
 
             <div className="mt-6 flex items-center gap-2 text-sm text-ocean-600">
               <Truck size={18} />
-              Free shipping on orders over $299
+              Free shipping on orders over ₱299
             </div>
           </div>
         </div>

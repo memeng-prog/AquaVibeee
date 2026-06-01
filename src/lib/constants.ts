@@ -1,6 +1,6 @@
 import type { ProductCategory } from '@/types'
 
-export const SITE_NAME = "Meng's Fish Tank"
+export const SITE_NAME = 'AquaVibe Studio'
 export const SITE_TAGLINE = 'Premium aquariums crafted for thriving underwater worlds'
 export const SITE_EMAIL = 'hello@mengsfishtank.com'
 export const SITE_PHONE = '+1 (555) 234-5678'

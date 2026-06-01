@@ -5,22 +5,35 @@ import {
   SITE_PHONE,
   SITE_TAGLINE,
 } from '@/lib/constants'
+import { useAuth } from '@/context/AuthContext'
 import { Fish, Mail, MapPin, Phone, Share2, Video } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { NewsletterForm } from '@/components/home/NewsletterForm'
 
 export function Footer() {
+  const { user } = useAuth()
+  const logoTo = user?.role === 'staff' || user?.role === 'admin' ? '/dashboard' : '/'
+
   return (
     <footer className="bg-ocean-950 text-ocean-100">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ocean-600">
-                <Fish size={22} className="text-white" />
+            {logoTo === '/dashboard' ? (
+              <div className="flex items-center gap-2.5 cursor-default select-none" aria-disabled="true">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ocean-600">
+                  <Fish size={22} className="text-white" />
+                </div>
+                <span className="font-display text-xl font-bold text-white">{SITE_NAME}</span>
               </div>
-              <span className="font-display text-xl font-bold text-white">{SITE_NAME}</span>
-            </Link>
+            ) : (
+              <Link to={logoTo} className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-ocean-600">
+                  <Fish size={22} className="text-white" />
+                </div>
+                <span className="font-display text-xl font-bold text-white">{SITE_NAME}</span>
+              </Link>
+            )}
             <p className="mt-4 text-sm text-ocean-300 leading-relaxed">{SITE_TAGLINE}</p>
             <div className="mt-6 flex gap-3">
               <a

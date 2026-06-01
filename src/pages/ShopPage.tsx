@@ -6,6 +6,7 @@ import type { Product, ProductFilters } from '@/types'
 import { Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { getSupabase } from '@/lib/supabase'
 
 export function ShopPage() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -37,6 +38,23 @@ export function ShopPage() {
       cancelled = true
     }
   }, [filterKey, filters])
+
+  useEffect(() => {
+    const supabase = getSupabase()
+    if (!supabase) return
+
+    const channel = supabase
+      .channel('shop-products-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        // re-run the current filters
+        fetchProducts(filters).then((data) => setProducts(data))
+      })
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [filters])
 
   const updateFilters = (newFilters: ProductFilters) => {
     const params = new URLSearchParams()

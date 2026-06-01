@@ -1,4 +1,8 @@
-# Logs
+.env
+node_modules/
+dist/
+.vite/
+*.log# Logs
 logs
 *.log
 npm-debug.log*
@@ -22,3 +26,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files (keep secrets out of source control)
+.env
+.env.local
+
+echo ".env" >> .gitignore
+git add .gitignore
+git commit -m "Ignore local env file"
+.vercel

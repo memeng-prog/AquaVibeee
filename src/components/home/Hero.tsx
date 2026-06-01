@@ -43,7 +43,7 @@ export function Hero() {
             <div className="mt-12 grid grid-cols-3 gap-6">
               {[
                 { icon: Shield, label: '5-Year Warranty' },
-                { icon: Truck, label: 'Free Shipping $299+' },
+                { icon: Truck, label: 'Free Shipping ₱299+' },
                 { icon: Award, label: 'Expert Support' },
               ].map(({ icon: Icon, label }) => (
                 <div key={label} className="flex flex-col items-center sm:items-start gap-2">

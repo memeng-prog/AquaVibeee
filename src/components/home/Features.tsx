@@ -29,7 +29,7 @@ export function Features() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto">
           <h2 className="font-display text-3xl font-bold text-ocean-900 sm:text-4xl">
-            Why Choose Meng&apos;s?
+            Why Choose Us?
           </h2>
           <p className="mt-4 text-ocean-600">
             We combine artisan quality with modern technology to deliver aquariums that last generations.

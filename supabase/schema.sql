@@ -1,4 +1,4 @@
--- Meng's Fish Tank — Supabase schema
+-- AquaVibe Studio — Supabase schema
 -- Run in Supabase SQL Editor after creating your project
 
 -- Products
@@ -78,5 +78,56 @@ create policy "Anyone can subscribe to newsletter"
 create policy "Anyone can create orders"
   on public.orders for insert with check (true);
 
+-- Allow staff and admin to read orders
+create policy "Staff/Admin can read orders"
+  on public.orders for select using (
+    exists(
+      select 1 from public.profiles p where p.id = auth.uid() and p.role in ('staff','admin')
+    )
+  );
+
+-- Allow staff and admin to update order status (and only status)
+create policy "Staff/Admin can update order status"
+  on public.orders for update using (
+    exists(
+      select 1 from public.profiles p where p.id = auth.uid() and p.role in ('staff','admin')
+    )
+  ) with check (
+    status in ('pending','confirmed','shipped','delivered','cancelled')
+  );
+
 create index if not exists products_slug_idx on public.products (slug);
 create index if not exists products_category_idx on public.products (category);
+
+-- Profiles (link to auth.users)
+create table if not exists public.profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
+  email text unique not null,
+  full_name text,
+  role text not null default 'customer' check (role in ('customer','staff','admin')),
+  created_at timestamptz default now()
+);
+
+alter table public.profiles enable row level security;
+
+-- Allow users to read their own profile
+create policy "Users can read their own profile"
+  on public.profiles for select using (auth.uid() = id);
+
+-- Allow authenticated users to insert profiles for themselves (used on sign up)
+create policy "Users can insert their own profile"
+  on public.profiles for insert with check (auth.uid() = id);
+
+-- Allow staff/admin to read all profiles (for staff management)
+create policy "Staff/Admin can read all profiles"
+  on public.profiles for select using (
+    exists(
+      select 1 from public.profiles p where p.id = auth.uid() and p.role in ('staff','admin')
+    )
+  );
+
+-- Note: Creating staff/admin users with elevated roles from the client
+-- can be done via the AdminDashboard which signs up a user and inserts
+-- a profile. For initial bootstrap, create the first admin from the
+-- Supabase Dashboard (Auth → Users) and then insert a profile row with
+-- role = 'admin' in the SQL editor or via the Dashboard UI.

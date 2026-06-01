@@ -1,8 +1,8 @@
 /** Local image assets — bundled in /public/images for fast, reliable loading */
 
 export const images = {
-  hero: '/images/hero.svg',
-  about: '/images/about.svg',
+  hero: '/images/preme.jpg',
+  about: '/images/aboto.jpg',
   categories: {
     saltwater: '/images/categories/saltwater.svg',
     freshwater: '/images/categories/freshwater.svg',
@@ -11,13 +11,20 @@ export const images = {
     accessories: '/images/categories/accessories.svg',
   },
   products: {
+     azule: '/images/products/azule.jpg',
     'azure-reef-120': '/images/products/azure-reef-120.svg',
+     serin: '/images/products/serin.jpg',
     'serenity-fresh-75': '/images/products/serenity-fresh-75.svg',
+     coral: '/images/products/coral.jpg',
     'coral-mini-20': '/images/products/coral-mini-20.svg',
     'deep-blue-custom': '/images/products/deep-blue-custom.svg',
+     cani: '/images/products/cani.jpg',
     'tidal-pro-filter': '/images/products/tidal-pro-filter.svg',
+     led: '/images/products/led.jpg',
     'reef-spectrum-led': '/images/products/reef-spectrum-led.svg',
+     lagoon: '/images/products/lagoon.jpg',
     'lagoon-salt-90': '/images/products/lagoon-salt-90.svg',
+     zen: '/images/products/zen.jpg',
     'zen-planted-40': '/images/products/zen-planted-40.svg',
   },
 } as const

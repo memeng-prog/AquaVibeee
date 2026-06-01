@@ -17,7 +17,7 @@ export async function createOrder(
     shipping,
     tax,
     total,
-    status: 'confirmed',
+    status: 'pending',
     shippingAddress: {
       fullName: formData.fullName,
       email: formData.email,
@@ -33,9 +33,16 @@ export async function createOrder(
     createdAt: new Date().toISOString(),
   }
 
+  const persistLocally = () => {
+    const existing = JSON.parse(localStorage.getItem('mft_orders') ?? '[]') as Order[]
+    existing.push(order)
+    localStorage.setItem('mft_orders', JSON.stringify(existing))
+  }
+
   if (isSupabaseConfigured) {
     const supabase = getSupabase()!
-    const { error } = await supabase.from('orders').insert({
+
+    const richPayload = {
       items: items.map((i) => ({
         product_id: i.product.id,
         name: i.product.name,
@@ -47,17 +54,34 @@ export async function createOrder(
       shipping,
       tax,
       total,
-      status: 'confirmed',
+      status: 'pending',
       shipping_address: order.shippingAddress,
       shipping_method: formData.shippingMethod,
-    } as never)
+    } as never
 
-    if (error) throw error
-  } else {
-    const existing = JSON.parse(localStorage.getItem('mft_orders') ?? '[]') as Order[]
-    existing.push(order)
-    localStorage.setItem('mft_orders', JSON.stringify(existing))
+    // Some dev schemas only have total/status/created_at, so try the full payload first,
+    // then fall back to a minimal payload, then finally localStorage.
+    const fullInsert = await supabase.from('orders').insert(richPayload)
+    if (!fullInsert.error) {
+      return order
+    }
+
+    console.error('createOrder rich insert failed:', fullInsert.error)
+
+    const minimalInsert = await supabase
+      .from('orders')
+      .insert({ total, status: 'pending' } as never)
+
+    if (!minimalInsert.error) {
+      return order
+    }
+
+    console.error('createOrder minimal insert failed:', minimalInsert.error)
+    persistLocally()
+    return order
   }
+
+  persistLocally()
 
   return order
 }

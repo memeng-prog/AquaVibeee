@@ -62,6 +62,19 @@ export interface Database {
         }
         Update: Partial<Database['public']['Tables']['orders']['Insert']>
       }
+      profiles: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          role: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at'> & {
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['profiles']['Insert']>
+      }
       contact_messages: {
         Row: {
           id: string

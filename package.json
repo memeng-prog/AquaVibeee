@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start:api": "node server/create-staff-server.js",
+    "setup:init-users": "node scripts/create-initial-users.js",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

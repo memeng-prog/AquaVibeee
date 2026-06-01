@@ -24,7 +24,7 @@ export function AboutPage() {
             <div className="rounded-2xl overflow-hidden shadow-card">
               <img
                 src={images.about}
-                alt="Aquarium craftsmanship at Meng's Fish Tank"
+                alt="Aquarium craftsmanship at AquaVibe Studio"
                 className="w-full object-cover"
               />
             </div>
