@@ -1,5 +1,6 @@
 import { MOCK_PRODUCTS } from '@/data/products'
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase'
+import { normalizeProductImageUrl, productGallery } from '@/lib/images'
 import type { Product, ProductFilters } from '@/types'
 import { filterProducts } from '@/lib/utils'
 
@@ -19,8 +20,8 @@ function mapDbRow(row: Record<string, unknown>): Product {
     price: Number(row.price ?? 0),
     compareAtPrice: (row.compare_at_price as number) ?? undefined,
     category: ((row.category as Product['category']) || 'accessories') as Product['category'],
-    imageUrl: (row.image_url as string) || MOCK_PRODUCTS[0].imageUrl,
-    gallery: (row.gallery as string[]) ?? [],
+    imageUrl: normalizeProductImageUrl(row.image_url as string | undefined, slug),
+    gallery: (row.gallery as string[]) ?? productGallery(slug),
     capacityLiters: Number(row.capacity_liters ?? 0),
     dimensions: (row.dimensions as string) || 'N/A',
     material: (row.material as string) || 'N/A',

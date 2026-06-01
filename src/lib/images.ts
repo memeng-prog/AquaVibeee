@@ -29,8 +29,42 @@ export const images = {
   },
 } as const
 
+const productDefaultImages: Record<string, string> = {
+  'azure-reef-120': images.products.azule,
+  'serenity-fresh-75': images.products.serin,
+  'coral-mini-20': images.products.coral,
+  'deep-blue-custom': images.products['deep-blue-custom'],
+  'tidal-pro-filter': images.products.cani,
+  'reef-spectrum-led': images.products.led,
+  'lagoon-salt-90': images.products.lagoon,
+  'zen-planted-40': images.products.zen,
+}
+
 export function productImage(slug: string): string {
   return images.products[slug as keyof typeof images.products] ?? '/images/products/default.svg'
+}
+
+export function normalizeProductImageUrl(rawImageUrl: string | undefined, slug: string): string {
+  const fallback = productDefaultImages[slug] ?? productImage(slug)
+  if (!rawImageUrl?.trim()) return fallback
+
+  const normalized = rawImageUrl.trim()
+  if (/^https?:\/\//.test(normalized)) return normalized
+
+  const productValues = Object.values(images.products) as string[]
+  if (productValues.includes(normalized)) return normalized
+
+  if (normalized.startsWith('/images/products/')) {
+    if (normalized.includes(`/${slug}.`) || normalized.includes(`/${slug}-`)) {
+      return fallback
+    }
+
+    const filename = normalized.split('/').pop()
+    const matching = productValues.find((src) => src.endsWith(filename ?? ''))
+    if (matching) return matching
+  }
+
+  return fallback
 }
 
 export function productGallery(slug: string): string[] {
