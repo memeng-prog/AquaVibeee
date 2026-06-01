@@ -77,7 +77,8 @@ export function StaffManagement() {
           
           if (resp.ok) {
             const body = await resp.json().catch(() => ({}))
-            const remote = (body.data || []).map((r: any) => ({ id: r.id, name: r.full_name || r.email, email: r.email }))
+            const rows = body.data || body.staff || []
+            const remote = (rows || []).map((r: any) => ({ id: r.id, name: r.full_name || r.email, email: r.email }))
             if (remote && remote.length > 0) {
               setStaff(remote)
               setLoadingStaff(false)
