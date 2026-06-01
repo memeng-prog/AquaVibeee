@@ -20,7 +20,10 @@ export function ContactPage() {
       showToast('Message sent! We\'ll get back to you within 24 hours.')
       setForm({ name: '', email: '', subject: '', message: '' })
     } catch {
-      showToast('Failed to send message. Please try again.', 'error')
+      showToast(
+        'Our contact inbox is temporarily unavailable or Cannot be reached. Please check back in a little while.',
+        'error',
+      )
     } finally {
       setLoading(false)
     }

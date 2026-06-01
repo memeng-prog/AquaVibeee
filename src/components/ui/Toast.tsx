@@ -1,4 +1,4 @@
-import { CheckCircle, X, XCircle } from 'lucide-react'
+import { CheckCircle, Info } from 'lucide-react'
 import { useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -23,18 +23,20 @@ export function Toast({ toast, onDismiss }: ToastProps) {
     <div
       className={cn(
         'flex items-center gap-3 rounded-xl px-4 py-3 shadow-float animate-slide-up',
-        toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-coral-600 text-white',
+        toast.type === 'success'
+          ? 'bg-emerald-600 text-white'
+          : 'bg-amber-500 text-slate-950',
       )}
       role="alert"
     >
-      {toast.type === 'success' ? <CheckCircle size={20} /> : <XCircle size={20} />}
+      {toast.type === 'success' ? <CheckCircle size={20} /> : <Info size={20} />}
       <p className="flex-1 text-sm font-medium">{toast.message}</p>
       <button
         onClick={() => onDismiss(toast.id)}
-        className="rounded-lg p-1 hover:bg-white/20"
+        className="rounded-full border border-white/30 bg-white/10 px-3 py-1 text-sm font-medium text-white transition hover:bg-white/20"
         aria-label="Dismiss"
       >
-        <X size={16} />
+        Got it
       </button>
     </div>
   )
